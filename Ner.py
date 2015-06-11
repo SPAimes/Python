@@ -42,7 +42,7 @@ def connectMySQL():
     import sys
 
     try:
-        con = mdb.connect('127.0.0.1', 'objectivemanager', 'Emoyeni333', 'objectivemanager')
+        con = mdb.connect('127.0.0.1', 'objectivemanager', 'password', 'objectivemanager')
         cur = con.cursor()
         cur.execute("select * from feed limit 100")
 
