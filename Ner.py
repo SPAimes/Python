@@ -11,13 +11,13 @@ def ner(inputString):
     exampleArray3 = ['Instructed to advise Tesco on the financing of acquisition of Shell group. Tax and litigation (sanctions) teams involved']
    # print inputString
     for item in inputString:
-        tokenized = nltk.word_tokenize(item)
-        tagged = nltk.pos_tag(tokenized)
-      #  print tagged
+        try:
+            tokenized = nltk.word_tokenize(item)
+            tagged = nltk.pos_tag(tokenized)
+          #  print tagged
 
-        namedEnt = nltk.ne_chunk(tagged, binary=False)
-
-        try: 
+    
+            namedEnt = nltk.ne_chunk(tagged, binary=False)
             for i in range(len(namedEnt)):
                 if "ORGANIZATION" in str(namedEnt[i]):
                     print namedEnt[i].label() and namedEnt[i]
@@ -30,12 +30,13 @@ def ner(inputString):
             
       #  namedEnt.draw()
 
-def connectMongoDb():
+def connectMongoDb(orgName):
     from pymongo import MongoClient
     client = MongoClient()
     db = client.local
     collection = db.Organization
-    print collection.find_one()
+    result = collection.find_one(orgName)
+    print result
 
 def connectMySQL():
     import MySQLdb as mdb
@@ -44,18 +45,20 @@ def connectMySQL():
     try:
         con = mdb.connect('127.0.0.1', 'objectivemanager', 'password', 'objectivemanager')
         cur = con.cursor()
-        cur.execute("select * from feed limit 100")
+        cur.execute("select * from feed limit 100,100")
 
         rows = cur.fetchall()
 
         for row in rows:
-            #    print row[2]
-                ner([row[2]])
+                feedString = row[2].decode('latin1')
+                print feedString
+                # ner([row[2]])
+                ner([feedString])
         
     
     except mdb.Error, e:
       
-        print "Error %d: %s" % (e.args[0],e.args[1])
+        print "Error db %d: %s" % (e.args[0],e.args[1])
         sys.exit(1)
         
     finally:    
@@ -63,6 +66,6 @@ def connectMySQL():
         if con:    
             con.close()
 
-connectMongoDb()
+#connectMongoDb({"orgName": "shane Org1"})
 connectMySQL()
-ner(["For the first time in forever"])
+#ner(["For the first time in forever"])
