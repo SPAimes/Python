@@ -24,7 +24,7 @@ def ner(inputString, firstName, lastName, userId, feedId, taskId, objectiveId, c
             namedEnt = nltk.ne_chunk(tagged, binary=False)
             for i in range(len(namedEnt)):
                 if "ORGANIZATION" in str(namedEnt[i]):
-                    print namedEnt[i].label() and namedEnt[i] and namedEnt[i]
+                    #print namedEnt[i].label() and namedEnt[i] and namedEnt[i]
                     #connect_MongoDb_Create_Org_Person(namedEnt[i], firstName, lastName, userId, feedId, taskId, objectiveId, inputString)
                     
                     # Let's check if the company name is in the exclusions
@@ -33,19 +33,18 @@ def ner(inputString, firstName, lastName, userId, feedId, taskId, objectiveId, c
                         strOrgName = str(namedEnt[i])
                         strCleansedOrgName = strOrgName[14:-5]
                         #strCleansedOrgName = re.sub("\NNP", '', strCleansedOrgName)
-                        print " comparing " + str(n) + " " + strCleansedOrgName
+                        #print " comparing " + str(n) + " " + strCleansedOrgName
                         if n == strCleansedOrgName:
                             found = "true"
-                            print "Set found to " + found
+                            #print "Set found to " + found
                             break        
 
                     if found == "false":            
                         Upsert_Org_Person(namedEnt[i], firstName, lastName, userId, feedId, taskId, objectiveId, inputString, companyId)                    
                 elif "PERSON" in str(namedEnt[i]):
-                    print namedEnt[i].label() and namedEnt[i]
+                    print "Person"
                     
         except "Error NTLK", e:
-      
             print "Error %d: %s" % (e.args[0],e.args[1])
             
       #  namedEnt.draw()
@@ -107,7 +106,7 @@ def connectMySQL():
 
         for row in rows:
                 feedString = row[3].decode('latin1')
-                #print row
+                #print str(row[0]) + " " + str(row[3])
                 #print "%s %s" % (feedString, row[10])
                 userId = str(row[1])
                 #print userId
@@ -124,7 +123,7 @@ def connectMySQL():
                     firstName = userRow[0]
                     lastName = userRow[1]
                     companyId = userRow[2]
-                    print firstName + " " + lastName + " " + userId + " " + companyId
+                    #print firstName + " " + lastName + " " + userId + " " + companyId
                     ner([feedString], firstName, lastName, userId, feedId, taskId, objectiveId, companyId)
                 
         
@@ -152,6 +151,11 @@ def Upsert_Org_Person(orgName, firstName, lastName, userId, feedId, taskId, obje
         strOrgName = str(orgName)
         strCleansedOrgName = re.sub("'/NNP", '', strOrgName[14:-5])
         strCleansedOrgName = re.sub("'", '', strCleansedOrgName)
+        strCleansedOrgName = strCleansedOrgName.replace("/NNP", "")
+        strCleansedOrgName = strCleansedOrgName.replace("/", "")
+        strCleansedOrgName = strCleansedOrgName.replace("/NN", "")
+        strCleansedOrgName = strCleansedOrgName.replace("/JJ", "")
+                
         intIsPlan = 0
 
         osCur = con.cursor()
@@ -177,10 +181,10 @@ def Upsert_Org_Person(orgName, firstName, lastName, userId, feedId, taskId, obje
 
         userCur = con.cursor()
         sqlString = "select uid from ner_org_person where orgName = " + "'" + strCleansedOrgName + "'" + " and userId = " + "'" + str(userId) + "'" + " and feedId = " + "'" + str(feedId) + "'"
-        print sqlString
+        #print sqlString
         userCur.execute(sqlString)
         userRow = userCur.fetchone()
-        print str(userRow) + " was the result"
+        #print str(userRow) + " was the result"
         
         strFeedEntry = re.sub("[!@#'&$]", '', str(feedEntry))
         strFeedEntry = re.sub("'\'", '', strFeedEntry)
@@ -193,7 +197,7 @@ def Upsert_Org_Person(orgName, firstName, lastName, userId, feedId, taskId, obje
             strId = ""
             strId+= str(uuid.uuid4())
             
-            print "Org is " + strOrgName[14:-5]
+            #print "Org is " + strOrgName[14:-5]
             strTaskId = "NULL"
                     
            # Data Insert into the table
@@ -210,8 +214,8 @@ def Upsert_Org_Person(orgName, firstName, lastName, userId, feedId, taskId, obje
                 " " + "'" + strFeedEntry[2:-2] + "'" + "," \
                 " " + "'" + strTaskId + "'" + "," \
                 " " + "'" + str(companyId) + "'" + ")"
-            print str(query) + " about the insert the record"
-            print str(feedEntry)[3:-2]
+            print "About the insert the record"
+            #print str(feedEntry)[3:-2]
             #con.query(query)
             cur.execute(query)
             #con.insert(query)
